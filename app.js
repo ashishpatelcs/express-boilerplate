@@ -1,37 +1,46 @@
+/*
+ * Import required modules
+ */
 const express = require('express');
+const http = require('http');
 const path = require('path');
+const mongoose = require('mongoose');
+const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const fs = require('fs');
-const app = express();
-const http = require('http');
+
+/*
+ * Import configuration and middlewares
+ */
 const appConfig = require('./config/appConfig');
 const logger = require('./app/libs/loggerLib');
 const routeLoggerMiddleware = require('./app/middlewares/routeLogger.js');
 const globalErrorMiddleware = require('./app/middlewares/appErrorHandler');
-const mongoose = require('mongoose');
-const morgan = require('morgan');
 
+// Create an express app instance
+const app = express();
 
+// Setup middlewares
 app.use(morgan('dev'));
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(routeLoggerMiddleware.logIp);
 app.use(globalErrorMiddleware.globalErrorHandler);
-
-
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'client')));
 
-
+/*
+ * Import controllers, routes, models and libraries
+ */
 const modelsPath = './app/models';
 const controllersPath = './app/controllers';
 const libsPath = './app/libs';
 const middlewaresPath = './app/middlewares';
 const routesPath = './app/routes';
 
+// Setup cors header
 app.all('*', function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -66,7 +75,6 @@ app.use(globalErrorMiddleware.globalNotFoundHandler);
 
 const server = http.createServer(app);
 // start listening to http server
-console.log(appConfig);
 server.listen(appConfig.port);
 server.on('error', onError);
 server.on('listening', onListening);
@@ -105,7 +113,6 @@ function onError(error) {
  */
 
 function onListening() {
-  
   var addr = server.address();
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
@@ -145,10 +152,5 @@ mongoose.connection.on('open', function (err) {
   //process.exit(1)
 }); // enr mongoose connection open handler
 
-
-
-// end socketio connection handler
-
-
-
+// export the app
 module.exports = app;
